@@ -1,0 +1,113 @@
+2025-10-13 10:40:15 [INFO] ts_benchmark.data.data_source(124): Start loading 1 series in parallel
+2025-10-13 10:40:16 [INFO] ts_benchmark.data.data_source(133): Data loading finished.
+2025-10-13 10:40:16 [INFO] ts_benchmark.data.suites.global_storage(40): Data server starting...
+2025-10-13 10:40:16 [INFO] ts_benchmark.data.suites.global_storage(41): Start sending data to the global storage.
+2025-10-13 10:40:16 [INFO] ts_benchmark.data.suites.global_storage(46): Notifying all workers to sync data from the global storage.
+2025-10-13 10:40:16 [INFO] ts_benchmark.data.suites.global_storage(49): Data server started.
+2025-10-13 10:40:16 [INFO] ts_benchmark.models.model_loader(98): Trying to load model ts_benchmark.baselines.ccd.CCD
+scheduling CCD:   0%|                                                                                                                   | 0/1 [00:00<?, ?it/s]---------------------------------------------------------- CCD
+Total trainable parameters: 8910070
+Validation loss decreased (inf --> 0.277694).  Saving model ...
+Updating learning rate to 0.005
+Validation loss decreased (0.277694 --> 0.276074).  Saving model ...
+Updating learning rate to 0.005
+Validation loss decreased (0.276074 --> 0.268967).  Saving model ...
+Updating learning rate to 0.005
+EarlyStopping counter: 1 out of 5
+Updating learning rate to 0.0045000000000000005
+EarlyStopping counter: 2 out of 5
+Updating learning rate to 0.004050000000000001
+Validation loss decreased (0.268967 --> 0.265597).  Saving model ...
+Updating learning rate to 0.0036450000000000007
+Validation loss decreased (0.265597 --> 0.262392).  Saving model ...
+Updating learning rate to 0.0032805
+EarlyStopping counter: 1 out of 5
+Updating learning rate to 0.0029524500000000006
+EarlyStopping counter: 2 out of 5
+Updating learning rate to 0.002657205
+Validation loss decreased (0.262392 --> 0.262060).  Saving model ...
+Updating learning rate to 0.0023914845000000003
+EarlyStopping counter: 1 out of 5
+Updating learning rate to 0.0021523360500000006
+EarlyStopping counter: 2 out of 5
+Updating learning rate to 0.0019371024450000004
+EarlyStopping counter: 3 out of 5
+Updating learning rate to 0.0017433922005000006
+EarlyStopping counter: 4 out of 5
+Updating learning rate to 0.0015690529804500003
+EarlyStopping counter: 5 out of 5
+scheduling CCD: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [16:35<00:00, 995.23s/it]
+collecting CCD: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 6797.90it/s]
+
+2025-10-13 10:56:56 [INFO] ts_benchmark.data.data_source(124): Start loading 1 series in parallel
+2025-10-13 10:56:57 [INFO] ts_benchmark.data.data_source(133): Data loading finished.
+2025-10-13 10:56:57 [INFO] ts_benchmark.data.suites.global_storage(40): Data server starting...
+2025-10-13 10:56:57 [INFO] ts_benchmark.data.suites.global_storage(41): Start sending data to the global storage.
+2025-10-13 10:56:57 [INFO] ts_benchmark.data.suites.global_storage(46): Notifying all workers to sync data from the global storage.
+2025-10-13 10:56:57 [INFO] ts_benchmark.data.suites.global_storage(49): Data server started.
+2025-10-13 10:56:57 [INFO] ts_benchmark.models.model_loader(98): Trying to load model ts_benchmark.baselines.ccd.CCD
+scheduling CCD:   0%|                                                                                                                   | 0/1 [00:00<?, ?it/s]---------------------------------------------------------- CCD
+Total trainable parameters: 2735103
+Validation loss decreased (inf --> 0.306519).  Saving model ...
+Updating learning rate to 0.005
+Validation loss decreased (0.306519 --> 0.302533).  Saving model ...
+Updating learning rate to 0.005
+EarlyStopping counter: 1 out of 5
+Updating learning rate to 0.005
+EarlyStopping counter: 2 out of 5
+Updating learning rate to 0.0045000000000000005
+EarlyStopping counter: 3 out of 5
+Updating learning rate to 0.004050000000000001
+EarlyStopping counter: 4 out of 5
+Updating learning rate to 0.0036450000000000007
+EarlyStopping counter: 5 out of 5
+scheduling CCD: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [02:00<00:00, 120.93s/it]
+collecting CCD: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 6657.63it/s]
+
+2025-10-13 10:59:04 [INFO] ts_benchmark.data.data_source(124): Start loading 1 series in parallel
+2025-10-13 10:59:04 [INFO] ts_benchmark.data.data_source(133): Data loading finished.
+2025-10-13 10:59:04 [INFO] ts_benchmark.data.suites.global_storage(40): Data server starting...
+2025-10-13 10:59:04 [INFO] ts_benchmark.data.suites.global_storage(41): Start sending data to the global storage.
+2025-10-13 10:59:04 [INFO] ts_benchmark.data.suites.global_storage(46): Notifying all workers to sync data from the global storage.
+2025-10-13 10:59:04 [INFO] ts_benchmark.data.suites.global_storage(49): Data server started.
+2025-10-13 10:59:04 [INFO] ts_benchmark.models.model_loader(98): Trying to load model ts_benchmark.baselines.ccd.CCD
+scheduling CCD:   0%|                                                                                                                   | 0/1 [00:00<?, ?it/s]---------------------------------------------------------- CCD
+Total trainable parameters: 3081195
+Validation loss decreased (inf --> 0.364888).  Saving model ...
+Updating learning rate to 0.005
+EarlyStopping counter: 1 out of 5
+Updating learning rate to 0.005
+EarlyStopping counter: 2 out of 5
+Updating learning rate to 0.005
+EarlyStopping counter: 3 out of 5
+Updating learning rate to 0.0045000000000000005
+EarlyStopping counter: 4 out of 5
+Updating learning rate to 0.004050000000000001
+EarlyStopping counter: 5 out of 5
+scheduling CCD: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [01:57<00:00, 117.17s/it]
+collecting CCD: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 6967.28it/s]
+
+2025-10-13 11:01:07 [INFO] ts_benchmark.data.data_source(124): Start loading 1 series in parallel
+2025-10-13 11:01:08 [INFO] ts_benchmark.data.data_source(133): Data loading finished.
+2025-10-13 11:01:08 [INFO] ts_benchmark.data.suites.global_storage(40): Data server starting...
+2025-10-13 11:01:08 [INFO] ts_benchmark.data.suites.global_storage(41): Start sending data to the global storage.
+2025-10-13 11:01:08 [INFO] ts_benchmark.data.suites.global_storage(46): Notifying all workers to sync data from the global storage.
+2025-10-13 11:01:08 [INFO] ts_benchmark.data.suites.global_storage(49): Data server started.
+2025-10-13 11:01:08 [INFO] ts_benchmark.models.model_loader(98): Trying to load model ts_benchmark.baselines.ccd.CCD
+scheduling CCD:   0%|                                                                                                                   | 0/1 [00:00<?, ?it/s]---------------------------------------------------------- CCD
+Total trainable parameters: 4528361
+Validation loss decreased (inf --> 0.449319).  Saving model ...
+Updating learning rate to 0.005
+Validation loss decreased (0.449319 --> 0.443674).  Saving model ...
+Updating learning rate to 0.005
+EarlyStopping counter: 1 out of 5
+Updating learning rate to 0.005
+EarlyStopping counter: 2 out of 5
+Updating learning rate to 0.0045000000000000005
+EarlyStopping counter: 3 out of 5
+Updating learning rate to 0.004050000000000001
+EarlyStopping counter: 4 out of 5
+Updating learning rate to 0.0036450000000000007
+EarlyStopping counter: 5 out of 5
+scheduling CCD: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [02:36<00:00, 156.40s/it]
+collecting CCD: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 6636.56it/s]

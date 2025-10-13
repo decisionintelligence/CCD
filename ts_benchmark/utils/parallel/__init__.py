@@ -6,7 +6,6 @@ from ts_benchmark.utils.parallel.base import TaskResult, SharedStorage
 from ts_benchmark.utils.parallel.ray_backend import RayBackend
 from ts_benchmark.utils.parallel.sequential_backend import SequentialBackend
 
-from my_tools.get_host_id import monitor_process_decorator
 
 __all__ = ["ParallelBackend", "SharedStorage"]
 
@@ -45,7 +44,7 @@ class ParallelBackend(metaclass=Singleton):
         )
         self.backend.init()
         self.default_timeout = default_timeout
-    @monitor_process_decorator
+    # @monitor_process_decorator
     def schedule(
         self, fn: Callable, args: Tuple, timeout: Optional[float] = None
     ) -> TaskResult:

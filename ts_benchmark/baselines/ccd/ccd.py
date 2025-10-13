@@ -3,13 +3,14 @@ import torch
 import torch.nn as nn
 from sklearn.preprocessing import StandardScaler
 from torch.optim import lr_scheduler 
-from ts_benchmark.baselines.duet.utils.tools import EarlyStopping, adjust_learning_rate
+from ts_benchmark.baselines.ccd.utils.tools import EarlyStopping, adjust_learning_rate
 from ts_benchmark.utils.data_processing import split_time
 from typing import Type, Dict, Optional, Tuple
 from torch import optim
 import numpy as np
 from torch.utils.data import DataLoader
 import pandas as pd
+import time
 from ts_benchmark.baselines.utils import (
     forecasting_data_provider,
     train_val_split,
@@ -87,7 +88,7 @@ class CCD(ModelBase):
 
     @property
     def model_name(self):
-        return "ModernTCN"
+        return "CCD"
 
     @staticmethod
     def required_hyper_params() -> dict:
@@ -342,7 +343,6 @@ class CCD(ModelBase):
             scheduler=None
         for epoch in range(config.num_epochs):
             self.model.train()
-            # for input, target, input_mark, target_mark in train_data_loader:
             for i, (input, target, input_mark, target_mark) in enumerate(
                 train_data_loader
             ):
@@ -355,9 +355,9 @@ class CCD(ModelBase):
                 )
                 # decoder input
                 
-                time = self.model(input)
+                out = self.model(input)
                 target = target[:, -config.horizon:, :series_dim]
-                output = time.real
+                output = out.real
 
 
                 time_loss = criterion(output, target)
