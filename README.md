@@ -48,8 +48,11 @@ You can obtained the well pre-processed datasets from [Google Drive](https://dri
 
 3. Train and evaluate model
 
-- We provide all the experiment scripts for CCD and other baselines under the folder `./scripts/multivariate_forecast`.  For example you can reproduce all the experiment results as the following script:
+- We provide all the experiment scripts for CCD and other baselines under the folder `./scripts/multivariate_forecast/CCD`.  For example you can reproduce all the experiment results as the following script:
 
 ```shell
 sh ./scripts/CCD/ETTh2.sh
 ```
+
+# Reproducibility
+We provide all the train logs in `./log` and all the result in `./result` 
