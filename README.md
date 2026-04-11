@@ -9,6 +9,17 @@
 
 This code is the official PyTorch implementation of paper: CCD: Capturing Cross Correlations with Deformable Convolutional Networks for Multivariate Time Series Forecasting
 
+## Update Description
+
+We have made the fixed version available at `ts_benchmark/baselines/ccd_fixed`. Specifically, the following fixes have been implemented:
+
+1. In `ccd_fixed/layers/Shuffle.py`, restored the missing `* shuffled_scores` at line 53 compared to the previous version. This line implements one step in Eq. (5), attaching the ranking scores’ gradients to `x` to realize the straight-through proxy for adaptive shuffle learning.
+
+2. In `ccd_fixed/layers/Shuffle.py` at line 13, changed the initialization method to `torch.empty(shuffle_vector_shape, device=device)` to avoid hardcoded CUDA-specific logic, with the device determined by the passed parameter.
+
+3. Removed redundant ablation code from `ccd_fixed/layers/CrossDConv.py` to ensure the simplicity and stability of the open-source version.
+
+4. Updated scripts in the `scripts/CCD` directory to ensure that script parameters correspond to the actual test targets.
 
 ## Introduction
 
