@@ -21,6 +21,8 @@ We have made the fixed version available at `ts_benchmark/baselines/ccd_fixed`. 
 
 4. Updated scripts in the `scripts/CCD` directory to ensure that script parameters correspond to the actual test targets.
 
+We will carry out further verification and optimization to ensure a more robust and refined final open-source version.
+
 ## Introduction
 
 In this study, we address these challenges by proposing a gen-
