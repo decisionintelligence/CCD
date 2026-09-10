@@ -1,5 +1,5 @@
 dataset/
-# result/
+result/
 .idea/
 .vscode/
 .git
