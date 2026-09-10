@@ -1,5 +1,5 @@
 from torch import nn
-from .CrossDConv import CrossDConv
+from .CrossDConv import DConv
 from .Shuffle import Shuffler
 from einops import rearrange
 import torch
@@ -31,18 +31,15 @@ class Flatten_Linear_Head(nn.Module):
 
         self.flatten = nn.Flatten(start_dim=-2)
         self.linear2 = nn.Linear(nf, target_window)
-        # self.linear1 = nn.Linear(nf, nf)
         self.dropout = nn.Dropout(head_dropout)
             
     def forward(self, x):                                 # x: [bs x nvars x d_model x patch_num]
-        # x = self.flatten(x)
         x = self.dropout(x)
-        # x = F.relu(self.linear1(x)) + x
         x = self.linear2(x)
         return x
     
 class CFView(nn.Module):
-    def __init__(self, layers, cf_dim, seq_len, pred_len, d_model, enc_in, dropout, head_dropout, f_size, v_size, patch_len, sigma=1.5, max_number=3, c_shuffle_dim=1,f_shuffle_dim=2,configs=None):
+    def __init__(self, layers, cf_dim, seq_len, pred_len, d_model, enc_in, dropout, head_dropout, f_size, v_size, patch_len, sigma=1.5, max_number=3, c_shuffle_dim=1,f_shuffle_dim=2,configs=None, device='cuda'):
         
         super().__init__()
         self.layers = layers
@@ -53,10 +50,9 @@ class CFView(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.to_patch_embedding = nn.Sequential(nn.Linear(patch_len*2, dim),nn.Dropout(dropout))
 
-        self.dconvs = nn.ModuleList(CrossDConv(dim, dim, f_size, v_size, sigma=sigma, max_number=max_number,configs=configs) for _ in range(self.layers))
-        if configs.ablation != 3:
-            self.channel_shuffler = nn.ModuleList(Shuffler(num_channel,shuffle_vector_dim=c_shuffle_dim) for _ in range(1))
-            self.frequency_shuffler = nn.ModuleList(Shuffler(num_frequency,shuffle_vector_dim=f_shuffle_dim) for _ in range(1))
+        self.dconvs = nn.ModuleList(DConv(dim, dim, f_size, v_size, sigma=sigma, max_number=max_number,configs=configs) for _ in range(self.layers))
+        self.channel_shuffler = nn.ModuleList(Shuffler(num_channel,shuffle_vector_dim=c_shuffle_dim, device=device) for _ in range(1))
+        self.frequency_shuffler = nn.ModuleList(Shuffler(num_frequency,shuffle_vector_dim=f_shuffle_dim, device=device) for _ in range(1))
         self.configs = configs
         self.mlp_head = nn.Linear(dim, d_model*2)
         self.get_r = nn.Linear(d_model*2,d_model*2)
@@ -78,20 +74,16 @@ class CFView(nn.Module):
         x = torch.cat((z1,z2),-1)
         x = self.to_patch_embedding(x)
         x = rearrange(x,'b f c d -> b d f c')
-        if self.configs.ablation != 3:
-            x = self.frequency_shuffler[0](x)
+        x = self.frequency_shuffler[0](x)
         x = rearrange(x,'b d f c -> b d c f')
-        if self.configs.ablation != 3:
-            x = self.channel_shuffler[0](x)
+        x = self.channel_shuffler[0](x)
 
         for i in range(self.layers):
             x = self.dconvs[i](x) #+ x
             pass
-        if self.configs.ablation != 3:
-            x = self.channel_shuffler[0].invert(x)
+        x = self.channel_shuffler[0].invert(x)
         x = rearrange(x,'b d c f -> b d f c')
-        if self.configs.ablation != 3:
-            x = self.frequency_shuffler[0].invert(x)
+        x = self.frequency_shuffler[0].invert(x)
 
         x = rearrange(x,'b d f c -> b f c d')
         z = self.mlp_head(x)
@@ -109,7 +101,7 @@ class CFView(nn.Module):
 
 
 class CSView(nn.Module):
-    def __init__(self, layers, cf_dim, seq_len, pred_len, d_model, enc_in, dropout, head_dropout,  s_size, v_size, sample_rate=5, sigma=1.5, max_number=3, c_shuffle_dim=1,s_shuffle_dim=2,configs=None):
+    def __init__(self, layers, seq_len, pred_len, d_model, enc_in, dropout, head_dropout,  s_size, v_size, sample_rate=5, sigma=1.5, max_number=3, c_shuffle_dim=1,s_shuffle_dim=2,configs=None, device='cuda'):
         
         super().__init__()
 
@@ -130,11 +122,10 @@ class CSView(nn.Module):
    
         self.dropout = nn.Dropout(dropout)
 
-        self.dconvs = nn.ModuleList(CrossDConv(dim, dim, s_size, v_size, sigma=sigma,max_number=max_number,configs=configs) for _ in range(self.layers))
+        self.dconvs = nn.ModuleList(DConv(dim, dim, s_size, v_size, sigma=sigma,max_number=max_number,configs=configs) for _ in range(self.layers))
         
-        if configs.ablation != 3:
-            self.channel_shuffler = nn.ModuleList(Shuffler(num_channel ,shuffle_vector_dim=c_shuffle_dim) for _ in range(1))
-            self.scale_shuffler = nn.ModuleList(Shuffler(num_scale,shuffle_vector_dim=s_shuffle_dim) for _ in range(1))
+        self.channel_shuffler = nn.ModuleList(Shuffler(num_channel ,shuffle_vector_dim=c_shuffle_dim,device=device) for _ in range(1))
+        self.scale_shuffler = nn.ModuleList(Shuffler(num_scale,shuffle_vector_dim=s_shuffle_dim,device=device) for _ in range(1))
         self.configs = configs
 
         self.mlp_head = Flatten_MLP_Head(d_model* num_scale, pred_len, head_dropout=head_dropout)
@@ -147,6 +138,7 @@ class CSView(nn.Module):
            nn.Sequential(nn.Linear(seq_len//i, d_model)) for i in sample_rate)      
         
 
+
     def forward(self, z):      
 
         x=[]
@@ -157,21 +149,17 @@ class CSView(nn.Module):
         x = torch.stack(x,dim=1)
         x = rearrange(x,'b s c d -> b d s c')
 
-        if self.configs.ablation != 3:
-            x = self.scale_shuffler[0](x)
+        x = self.scale_shuffler[0](x)
         x = rearrange(x,'b d s c -> b d c s')
-        if self.configs.ablation != 3:
-            x = self.channel_shuffler[0](x)
+        x = self.channel_shuffler[0](x)
 
         for i in range(self.layers):
-            x = self.dconvs[i](x) #+ x
+            x = self.dconvs[i](x) 
             pass
 
-        if self.configs.ablation != 3:        
-            x = self.channel_shuffler[0].invert(x)
+        x = self.channel_shuffler[0].invert(x)
         x = rearrange(x,'b d c s -> b d s c')
-        if self.configs.ablation != 3:
-            x = self.scale_shuffler[0].invert(x)
+        x = self.scale_shuffler[0].invert(x)
 
         x = rearrange(x,'b d s c -> b c s d')
         

@@ -4,11 +4,10 @@ import math
 from einops import rearrange
 import torch.nn.functional as F
 
-class CrossDConv(nn.Module):
-    def __init__(self, inc, outc, t_size, c_size, stride=1, sigma=2.0, max_number=10, bias=None, modulation=True,head_dims=0,configs=None):
-        super(CrossDConv, self).__init__()
+class DConv(nn.Module):
+    def __init__(self, inc, outc, t_size, c_size, stride=1, sigma=2.0, max_number=10, modulation=True, configs=None):
+        super(DConv, self).__init__()
     
-        # --- Parameters (mostly unchanged) ---
         self.t_size = t_size
         self.sigma = sigma
         self.max_number = max_number
@@ -18,13 +17,8 @@ class CrossDConv(nn.Module):
         self.configs =  configs
         self.register_buffer("p_n", self._get_p_n(N=t_size + c_size, dtype=torch.float32))
 
-        # --- NEW: Sparsity Ratio Prediction Head ---
-        # This branch predicts the ratio of samples to *keep*.
-        # self.sparsity_ratio_conv = nn.Conv2d(inc, 1, kernel_size=3, stride=stride, padding=1)
-
-        # --- Convolution Layers (unchanged) ---
         self.pointwise_conv = nn.Conv2d(inc, outc, kernel_size=1, bias=True)
-    
+        
         if self.f_number > 0:
             self.p_conv_f = nn.Sequential(
                 nn.Conv2d(inc, inc, kernel_size=3, padding=1, stride=stride, groups=inc),
@@ -37,18 +31,16 @@ class CrossDConv(nn.Module):
                 nn.Conv2d(inc, 2 * self.c_number, kernel_size=1)
             )
             self.p_conv_c.register_full_backward_hook(self._set_lr)
+        
 
         if self.modulation:
             self.m_conv = nn.Sequential(
                 nn.Conv2d(inc, inc, kernel_size=3, padding=1, stride=stride, groups=inc),
-                # nn.GELU(),
                 nn.Conv2d(inc, self.all_numbers + 1, kernel_size=1)
             )
             nn.init.constant_(self.m_conv[1].weight, 0)
             self.m_conv.register_full_backward_hook(self._set_lr)
 
-        # --- MLP (unchanged) ---
-        # Note: A Conv2D MLP is often more suitable here.
         self.mlp = nn.Sequential(nn.Linear(outc, outc), nn.ReLU(), nn.Linear(outc, outc))
         self.norm = nn.LayerNorm(outc)
     @staticmethod
@@ -59,25 +51,21 @@ class CrossDConv(nn.Module):
 
     def forward(self, x):
         b, c, h_in, w_in = x.shape
-        if self.configs.ablation!=4:
-            # 1. PREDICT OFFSETS AND MODULATION MASK (Unchanged)
-            offset_f = self.p_conv_f(x) if hasattr(self, 'p_conv_f') else torch.empty(b, 0, h_in, w_in, device=x.device)
-            offset_c = self.p_conv_c(x) if hasattr(self, 'p_conv_c') else torch.empty(b, 0, h_in, w_in, device=x.device)
-            offset = torch.cat((offset_f, offset_c), dim=1)
-        else:
-            offset = self.p_conv(x)
+        # 1. PREDICT OFFSETS AND MODULATION MASK (Unchanged)
+        offset_f = self.p_conv_f(x) if hasattr(self, 'p_conv_f') else torch.empty(b, 0, h_in, w_in, device=x.device)
+        offset_c = self.p_conv_c(x) if hasattr(self, 'p_conv_c') else torch.empty(b, 0, h_in, w_in, device=x.device)
+        offset = torch.cat((offset_f, offset_c), dim=1)
 
         h_out, w_out = offset.size(2), offset.size(3)
 
-        if self.configs.ablation!=5:
-            modulation_scores = self.m_conv(x)
-            sparsity_ratio = modulation_scores[:,-1].unsqueeze(1)
-            modulation_scores = modulation_scores[:,:self.all_numbers]
+        modulation_scores = self.m_conv(x)
+        sparsity_ratio = modulation_scores[:,-1].unsqueeze(1)
+        modulation_scores = modulation_scores[:,:self.all_numbers]
 
-            tau = 0.1
-            soft_mask = torch.sigmoid((modulation_scores - sparsity_ratio) / tau)
-            masked_scores = modulation_scores + torch.log(soft_mask + 1e-10)
-            final_modulation_mask = torch.softmax(masked_scores, dim=1)
+        tau = 0.1
+        soft_mask = torch.sigmoid((modulation_scores - sparsity_ratio) / tau)
+        masked_scores = modulation_scores + torch.log(soft_mask + 1e-10)
+        final_modulation_mask = torch.softmax(masked_scores, dim=1)
 
        
         grid_y, grid_x = torch.meshgrid(torch.arange(0, h_out * self.stride, self.stride, device=x.device, dtype=x.dtype), torch.arange(0, w_out * self.stride, self.stride, device=x.device, dtype=x.dtype), indexing='ij')
@@ -96,10 +84,7 @@ class CrossDConv(nn.Module):
         sampled_features = sampled_features.view(b, c, self.all_numbers, h_out, w_out)
 
         
-        if self.configs.ablation!=5:
-            modulated_features = sampled_features * final_modulation_mask.unsqueeze(1)
-        elif self.configs.ablation==5:
-            modulated_features = sampled_features
+        modulated_features = sampled_features * final_modulation_mask.unsqueeze(1)
 
         # Aggregate the features from the selected points.
         aggregated_features = torch.sum(modulated_features, dim=2)
@@ -108,9 +93,7 @@ class CrossDConv(nn.Module):
         out = self.pointwise_conv(aggregated_features)
         
         out_permuted = rearrange(out, 'b d h w -> b (h w) d')
-        # x = rearrange(x, 'b d h w -> b (h w) d')
-        out_mlp = self.mlp(out_permuted) #+ x
-        # out_mlp = self.norm(out_mlp)
+        out_mlp = self.mlp(out_permuted)
         out = rearrange(out_mlp, 'b (h w) d -> b d h w', h=h_out, w=w_out)
         return  out + x
         
@@ -148,11 +131,11 @@ class CrossDConv(nn.Module):
             self.c_number = sum(c_number).item()
         else:
             self.c_number = 0
-
+            
+        
         p_n_x = torch.tensor(p_n_x, dtype=dtype)
         p_n_y = torch.tensor(p_n_y, dtype=dtype)
         p_n = torch.cat([p_n_x, p_n_y], 0)
         self.all_numbers = p_n_x.shape[0]
         p_n = p_n.view(1, 2 * self.all_numbers, 1, 1).type(dtype)
-        # print(self.all_numbers)
         return p_n

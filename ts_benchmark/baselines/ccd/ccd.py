@@ -10,7 +10,6 @@ from torch import optim
 import numpy as np
 from torch.utils.data import DataLoader
 import pandas as pd
-import time
 from ts_benchmark.baselines.utils import (
     forecasting_data_provider,
     train_val_split,
@@ -25,9 +24,7 @@ DEFAULT_TRANSFORMER_BASED_HYPER_PARAMS = {
     "output": 0,
     "e_layers":2,
     "n_heads":8,
-    "d_model":512,
     "d_ff":2048,
-    "dropout":0.05,
     "fc_dropout":0.05,
     "head_dropout":0.0,
     "individual":True,
@@ -39,8 +36,6 @@ DEFAULT_TRANSFORMER_BASED_HYPER_PARAMS = {
     "subtract_last":False,
     "use_nys":False,
     "compile":False,
-    "ablation":0,
-    "cf_dim":48,
     "cf_depth":2,
     "cf_heads":6,
     "cf_mlp":128,
@@ -57,13 +52,35 @@ DEFAULT_TRANSFORMER_BASED_HYPER_PARAMS = {
     "patience": 10,
     "freq":'h',
     "batch_size":128,
-    "alpha":1,
     "gama":0.0001,
     "pct_start":0.3,
-    "c_shuffle_dim":1,
     "f_shuffle_dim":2,
-    "s_shuffle_dim":3,
-    "ablation":0
+    "s_shuffle_dim":2,
+    "alpha": 0.0,
+    "c_shuffle_dim": 2, 
+    "cf_dim": 64, 
+    "d_model": 64, 
+    "dropout": 0.1, 
+    "f_size": 3, 
+    "s_size": 2,
+    "frequency_shuffler": True, 
+    "head_dims": 1, 
+    "head_dropout": 0.0, 
+    "layers": 2,
+    "max_number": 1, 
+    "norm": True, 
+    "num_epochs": 30, 
+    "patch_len": 8, 
+    "patience": 5, 
+    "s_shuffle_dim": 2, 
+    "s_size": 2, 
+    "sample_rate": 2,
+    "seq_len": 96, 
+    "series_dim": 128, 
+    "sigma": 1.5, 
+    "stride": 8, 
+    "v_size": 1,
+    "device":"cuda"
 }
 
 class TransformerConfig:
@@ -78,6 +95,14 @@ class TransformerConfig:
     def pred_len(self):
         return self.horizon
 
+class MASE(nn.Module):
+    def __init__(self, alpha):
+        super(MASE, self).__init__()
+        self.mae = nn.L1Loss()
+        self.mse = nn.MSELoss()
+        self.alpha = alpha
+    def forward(self,x,y):
+        return self.alpha*self.mae(x,y) + (1-self.alpha)*self.mse(x,y)
 
 class CCD(ModelBase):
     def __init__(self, **kwargs):
@@ -267,6 +292,10 @@ class CCD(ModelBase):
             self.multi_forecasting_hyper_param_tune(train_valid_data)
 
         self.model = Model(self.config)
+        if self.config.compile:
+            print("========================= start compile==========================")
+            self.model = torch.compile(self.model)
+            print("========================= end compile==========================")
         print(
             "----------------------------------------------------------",
             self.model_name,
@@ -343,6 +372,7 @@ class CCD(ModelBase):
             scheduler=None
         for epoch in range(config.num_epochs):
             self.model.train()
+            # for input, target, input_mark, target_mark in train_data_loader:
             for i, (input, target, input_mark, target_mark) in enumerate(
                 train_data_loader
             ):
@@ -355,9 +385,9 @@ class CCD(ModelBase):
                 )
                 # decoder input
                 
-                out = self.model(input)
+                time = self.model(input)
                 target = target[:, -config.horizon:, :series_dim]
-                output = out.real
+                output = time.real
 
 
                 time_loss = criterion(output, target)

@@ -56,6 +56,7 @@ class EarlyStopping:
         self.val_loss_min = np.Inf
         self.delta = delta
         self.check_point = None
+
     def __call__(self, val_loss, model):
         score = -val_loss
         if self.best_score is None:

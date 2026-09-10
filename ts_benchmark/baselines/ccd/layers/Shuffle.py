@@ -4,13 +4,13 @@ from einops import rearrange
 import torch.nn.init as init
            
 class Shuffler(nn.Module):
-    def __init__(self,n_vars, shuffle_vector_dim=4, initialization_type='kaiming'):
+    def __init__(self,n_vars, shuffle_vector_dim=4, initialization_type='kaiming', device='cuda'):
         super().__init__()
         self.initialization_type = initialization_type
         self.shuffle_vector_dim = shuffle_vector_dim
         self.n_vars = n_vars
         shuffle_vector_shape = tuple([self.n_vars] * shuffle_vector_dim)
-        self.shuffle_vector = nn.Parameter(torch.empty(shuffle_vector_shape,device='cuda'))
+        self.shuffle_vector = nn.Parameter(torch.empty(shuffle_vector_shape,device=device))
         self.activation = "relu"
         self.initialize_shuffle_vector()
 
@@ -50,7 +50,7 @@ class Shuffler(nn.Module):
         shuffle_channel_indices = self.descending_indices.repeat(x.size(0), x.size(1), x.size(2), 1)
         shuffled_channels = torch.gather(input=x, index=shuffle_channel_indices, dim=3)
         shuffled_scores[non_zero_mask] *= inv
-        x = shuffled_channels
+        x = shuffled_channels * shuffled_scores
         x = rearrange(x, 'b d p c -> b d c p')
         self.shuffle_vector_sum = shuffle_vector_sum
         return x
